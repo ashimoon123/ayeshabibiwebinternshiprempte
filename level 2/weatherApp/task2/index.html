@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NovaStack · Countdown Timer</title>
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      background: #0b1a2e;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ---------- dynamic background orbs ---------- */
+    .bg-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: radial-gradient(circle at 20% 30%, #1a3a5a, #0b1a2e 80%);
+      transition: background 1.2s ease;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.25;
+      z-index: 0;
+      pointer-events: none;
+      animation: floatOrb 22s infinite alternate ease-in-out;
+    }
+    .orb-1 { width: 500px; height: 500px; top: -150px; left: -150px; background: #2a6f8f; }
+    .orb-2 { width: 600px; height: 600px; bottom: -200px; right: -200px; background: #7f5a3a; }
+    .orb-3 { width: 350px; height: 350px; top: 40%; left: 60%; background: #3a7f6f; animation-duration: 28s; }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(70px, -50px) scale(1.15); }
+    }
+
+    /* ---------- main card ---------- */
+    .timer-card {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 620px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-radius: 56px;
+      padding: 2.8rem 2.2rem 2.2rem;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.4s ease;
+    }
+
+    .timer-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 50px 90px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.07) inset;
+    }
+
+    /* brand */
+    .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      color: rgba(255, 255, 255, 0.35);
+      font-weight: 500;
+      font-size: 0.7rem;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .brand i {
+      margin-right: 8px;
+      color: rgba(255, 215, 100, 0.5);
+    }
+
+    .brand span {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.3rem 1.2rem;
+      border-radius: 40px;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* title */
+    .timer-title {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .timer-title h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: -0.3px;
+    }
+
+    .timer-title p {
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 0.85rem;
+      margin-top: 0.2rem;
+      font-weight: 400;
+    }
+
+    /* countdown display */
+    .countdown-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.8rem;
+      margin-bottom: 2.2rem;
+    }
+
+    .time-block {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 28px;
+      padding: 1rem 0.2rem;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(4px);
+      transition: all 0.25s ease;
+    }
+
+    .time-block:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .time-block .number {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1;
+      letter-spacing: -1px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .time-block .label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: rgba(255, 255, 255, 0.25);
+      margin-top: 0.3rem;
+      font-weight: 500;
+    }
+
+    .time-block .number.urgent {
+      color: #f7a1a1;
+      animation: pulseUrgent 1.2s infinite ease-in-out;
+    }
+
+    @keyframes pulseUrgent {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.97); }
+    }
+
+    /* progress ring (visual flair) */
+    .progress-ring-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .progress-ring {
+      width: 100%;
+      max-width: 300px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-ring .fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #ffd166, #ff9f5b);
+      border-radius: 12px;
+      transition: width 0.5s cubic-bezier(0.2, 0, 0, 1);
+      box-shadow: 0 0 20px rgba(255, 200, 80, 0.15);
+    }
+
+    /* controls */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      justify-content: center;
+      margin-bottom: 1.8rem;
+    }
+
+    .controls input {
+      flex: 1;
+      min-width: 160px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 0.7rem 1.2rem;
+      border-radius: 40px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      color: #f0f5fa;
+      outline: none;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    .controls input:focus {
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 0 3px rgba(100, 180, 255, 0.08);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .controls input::placeholder {
+      color: rgba(255, 255, 255, 0.2);
+      font-weight: 300;
+    }
+
+    .controls input[type="datetime-local"] {
+      color-scheme: dark;
+      cursor: pointer;
+    }
+
+    .controls input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7);
+      cursor: pointer;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: #f0f5fa;
+      padding: 0.7rem 1.6rem;
+      border-radius: 40px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn i {
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 0.9rem;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.1);
+      transform: scale(0.97);
+    }
+
+    .btn.primary {
+      background: rgba(255, 215, 100, 0.12);
+      border-color: rgba(255, 215, 100, 0.15);
+    }
+
+    .btn.primary i {
+      color: #ffd166;
+    }
+
+    .btn.primary:hover {
+      background: rgba(255, 215, 100, 0.2);
+      border-color: rgba(255, 215, 100, 0.25);
+    }
+
+    .btn.danger {
+      background: rgba(247, 161, 161, 0.08);
+      border-color: rgba(247, 161, 161, 0.08);
+    }
+
+    .btn.danger i {
+      color: #f7a1a1;
+    }
+
+    .btn.danger:hover {
+      background: rgba(247, 161, 161, 0.15);
+      border-color: rgba(247, 161, 161, 0.15);
+    }
+
+    /* status */
+    .status-message {
+      text-align: center;
+      color: rgba(200, 220, 255, 0.4);
+      font-weight: 400;
+      font-size: 0.8rem;
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      transition: 0.3s;
+    }
+
+    .status-message i {
+      margin-right: 6px;
+    }
+
+    .status-message.active {
+      color: #7bcfa6;
+    }
+
+    .status-message.expired {
+      color: #f7a1a1;
+    }
+
+    .footer-note {
+      margin-top: 1.8rem;
+      font-size: 0.6rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.06);
+      letter-spacing: 0.8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.02);
+      padding-top: 1.2rem;
+    }
+
+    /* responsive */
+    @media (max-width: 520px) {
+      .timer-card {
+        padding: 1.8rem 1.2rem;
+        border-radius: 36px;
+      }
+      .countdown-grid {
+        gap: 0.4rem;
+      }
+      .time-block .number {
+        font-size: 2.2rem;
+      }
+      .time-block {
+        padding: 0.8rem 0.1rem;
+      }
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .controls input {
+        min-width: unset;
+        width: 100%;
+      }
+      .btn-group {
+        justify-content: stretch;
+      }
+      .btn {
+        flex: 1;
+        justify-content: center;
+        padding: 0.7rem 1rem;
+      }
+      .timer-title h2 {
+        font-size: 1.2rem;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .time-block .number {
+        font-size: 1.7rem;
+      }
+      .countdown-grid {
+        gap: 0.2rem;
+      }
+    }
+
+    /* shake animation */
+    .shake {
+      animation: shake 0.35s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      60% { transform: translateX(6px); }
+    }
+  </style>
+</head>
+<body>
+  <!-- background layers -->
+  <div class="bg-layer" id="bgLayer"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="timer-card">
+    <!-- brand -->
+    <div class="brand">
+      <span><i class="fas fa-clock"></i> NovaStack · countdown</span>
+      <span><i class="fas fa-code"></i> live</span>
+    </div>
+
+    <!-- title -->
+    <div class="timer-title">
+      <h2 id="eventLabel">Countdown Timer</h2>
+      <p id="targetDisplay">Set a target date &amp; time</p>
+    </div>
+
+    <!-- countdown -->
+    <div class="countdown-grid" id="countdownGrid">
+      <div class="time-block">
+        <div class="number" id="daysDisplay">00</div>
+        <div class="label">Days</div>
+      </div>
+      <div class="time-block">
+        <div class="number" id="hoursDisplay">00</div>
+        <div class="label">Hours</div>
+      </div>
+      <div class="time-block">
+        <div class="number" id="minutesDisplay">00</div>
+        <div class="label">Minutes</div>
+      </div>
+      <div class="time-block">
+        <div class="number" id="secondsDisplay">00</div>
+        <div class="label">Seconds</div>
+      </div>
+    </div>
+
+    <!-- progress bar -->
+    <div class="progress-ring-wrap">
+      <div class="progress-ring">
+        <div class="fill" id="progressFill" style="width: 100%;"></div>
+      </div>
+    </div>
+
+    <!-- controls -->
+    <div class="controls">
+      <input type="datetime-local" id="targetDateTime" value="">
+      <div class="btn-group">
+        <button class="btn primary" id="startBtn"><i class="fas fa-play"></i> Start</button>
+        <button class="btn" id="resetBtn"><i class="fas fa-undo"></i> Reset</button>
+        <button class="btn danger" id="stopBtn"><i class="fas fa-stop"></i> Stop</button>
+      </div>
+    </div>
+
+    <!-- status -->
+    <div class="status-message" id="statusMessage">
+      <i class="fas fa-circle-info"></i> Set a date and click Start
+    </div>
+
+    <div class="footer-note">
+      <i class="fas fa-hourglass-half"></i> NovaStack Hub · Web Dev Intern
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      "use strict";
+
+      // DOM refs
+      const daysDisplay = document.getElementById('daysDisplay');
+      const hoursDisplay = document.getElementById('hoursDisplay');
+      const minutesDisplay = document.getElementById('minutesDisplay');
+      const secondsDisplay = document.getElementById('secondsDisplay');
+      const progressFill = document.getElementById('progressFill');
+      const targetDateTime = document.getElementById('targetDateTime');
+      const startBtn = document.getElementById('startBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const statusMessage = document.getElementById('statusMessage');
+      const eventLabel = document.getElementById('eventLabel');
+      const targetDisplay = document.getElementById('targetDisplay');
+      const bgLayer = document.getElementById('bgLayer');
+
+      // state
+      let targetDate = null;          // Date object
+      let timerInterval = null;
+      let isRunning = false;
+      let initialTotalMs = 0;         // for progress
+
+      // ---------- helpers ----------
+      function formatNumber(n) {
+        return String(n).padStart(2, '0');
+      }
+
+      function updateBackground(progress) {
+        // progress: 0..1 (1 = full, 0 = expired)
+        const p = Math.max(0, Math.min(1, progress));
+        const r = Math.round(11 + 30 * (1 - p));
+        const g = Math.round(26 + 40 * (1 - p));
+        const b = Math.round(46 + 30 * (1 - p));
+        bgLayer.style.background = `radial-gradient(circle at 20% 30%, rgb(${r+10}, ${g+20}, ${b+30}), rgb(${r}, ${g}, ${b}) 80%)`;
+      }
+
+      // ---------- update UI ----------
+      function updateDisplay(msLeft) {
+        if (msLeft <= 0) {
+          daysDisplay.textContent = '00';
+          hoursDisplay.textContent = '00';
+          minutesDisplay.textContent = '00';
+          secondsDisplay.textContent = '00';
+          progressFill.style.width = '0%';
+          updateBackground(0);
+          return;
+        }
+
+        const totalSec = Math.floor(msLeft / 1000);
+        const days = Math.floor(totalSec / 86400);
+        const hours = Math.floor((totalSec % 86400) / 3600);
+        const minutes = Math.floor((totalSec % 3600) / 60);
+        const seconds = totalSec % 60;
+
+        daysDisplay.textContent = formatNumber(days);
+        hoursDisplay.textContent = formatNumber(hours);
+        minutesDisplay.textContent = formatNumber(minutes);
+        secondsDisplay.textContent = formatNumber(seconds);
+
+        // progress
+        if (initialTotalMs > 0) {
+          const progress = Math.max(0, msLeft / initialTotalMs);
+          progressFill.style.width = `${progress * 100}%`;
+          updateBackground(progress);
+        } else {
+          progressFill.style.width = '100%';
+          updateBackground(1);
+        }
+
+        // urgent pulse if less than 1 hour
+        const totalMs = msLeft;
+        const blocks = [daysDisplay, hoursDisplay, minutesDisplay, secondsDisplay];
+        if (totalMs < 3600000 && totalMs > 0) {
+          blocks.forEach(el => el.classList.add('urgent'));
+        } else {
+          blocks.forEach(el => el.classList.remove('urgent'));
+        }
+      }
+
+      // ---------- core timer ----------
+      function tick() {
+        if (!targetDate) return;
+        const now = Date.now();
+        let msLeft = targetDate.getTime() - now;
+
+        if (msLeft <= 0) {
+          msLeft = 0;
+          updateDisplay(0);
+          statusMessage.className = 'status-message expired';
+          statusMessage.innerHTML = `<i class="fas fa-hourglass-end"></i> Time is up!`;
+          if (isRunning) {
+            stopTimer();
+          }
+          return;
+        }
+
+        updateDisplay(msLeft);
+        statusMessage.className = 'status-message active';
+        statusMessage.innerHTML = `<i class="fas fa-hourglass-half"></i> Counting down…`;
+      }
+
+      function startTimer() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+
+        if (!targetDate) {
+          statusMessage.className = 'status-message';
+          statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Please set a target date first.`;
+          return;
+        }
+
+        const now = Date.now();
+        const msLeft = targetDate.getTime() - now;
+        if (msLeft <= 0) {
+          statusMessage.className = 'status-message expired';
+          statusMessage.innerHTML = `<i class="fas fa-hourglass-end"></i> Target date is in the past. Set a future date.`;
+          updateDisplay(0);
+          return;
+        }
+
+        // initial total for progress
+        initialTotalMs = targetDate.getTime() - Date.now();
+        if (initialTotalMs <= 0) initialTotalMs = 1;
+
+        isRunning = true;
+        tick();
+        timerInterval = setInterval(tick, 500);
+        statusMessage.className = 'status-message active';
+        statusMessage.innerHTML = `<i class="fas fa-play"></i> Running…`;
+      }
+
+      function stopTimer() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        isRunning = false;
+        statusMessage.className = 'status-message';
+        statusMessage.innerHTML = `<i class="fas fa-pause"></i> Paused. Click Start to resume.`;
+      }
+
+      function resetTimer() {
+        stopTimer();
+        targetDate = null;
+        initialTotalMs = 0;
+        daysDisplay.textContent = '00';
+        hoursDisplay.textContent = '00';
+        minutesDisplay.textContent = '00';
+        secondsDisplay.textContent = '00';
+        progressFill.style.width = '100%';
+        updateBackground(1);
+        targetDateTime.value = '';
+        eventLabel.textContent = 'Countdown Timer';
+        targetDisplay.textContent = 'Set a target date & time';
+        statusMessage.className = 'status-message';
+        statusMessage.innerHTML = `<i class="fas fa-circle-info"></i> Set a date and click Start`;
+        // remove urgent
+        document.querySelectorAll('.time-block .number').forEach(el => el.classList.remove('urgent'));
+      }
+
+      // ---------- set target from input ----------
+      function setTargetFromInput() {
+        const val = targetDateTime.value;
+        if (!val) {
+          statusMessage.className = 'status-message';
+          statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Please select a valid date and time.`;
+          return false;
+        }
+        const dt = new Date(val);
+        if (isNaN(dt.getTime())) {
+          statusMessage.className = 'status-message';
+          statusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Invalid date format.`;
+          return false;
+        }
+        const now = Date.now();
+        if (dt.getTime() <= now) {
+          statusMessage.className = 'status-message expired';
+          statusMessage.innerHTML = `<i class="fas fa-hourglass-end"></i> Date must be in the future.`;
+          return false;
+        }
+
+        targetDate = dt;
+        initialTotalMs = targetDate.getTime() - now;
+        if (initialTotalMs <= 0) initialTotalMs = 1;
+
+        // update label
+        const formatted = dt.toLocaleString('en-US', { 
+          weekday: 'short', 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        eventLabel.textContent = `Countdown to ${formatted}`;
+        targetDisplay.textContent = `Target: ${formatted}`;
+
+        statusMessage.className = 'status-message active';
+        statusMessage.innerHTML = `<i class="fas fa-check-circle"></i> Target set. Click Start.`;
+        updateDisplay(dt.getTime() - now);
+        return true;
+      }
+
+      // ---------- event listeners ----------
+      startBtn.addEventListener('click', function() {
+        if (!targetDate) {
+          // try to set from input first
+          if (!setTargetFromInput()) {
+            return;
+          }
+        }
+        // if target is still in past
+        if (targetDate && targetDate.getTime() <= Date.now()) {
+          statusMessage.className = 'status-message expired';
+          statusMessage.innerHTML = `<i class="fas fa-hourglass-end"></i> Target is in the past. Choose a future date.`;
+          return;
+        }
+        startTimer();
+      });
+
+      stopBtn.addEventListener('click', function() {
+        stopTimer();
+      });
+
+      resetBtn.addEventListener('click', function() {
+        resetTimer();
+      });
+
+      targetDateTime.addEventListener('change', function() {
+        // if timer is running, stop it when user changes date
+        if (isRunning) {
+          stopTimer();
+        }
+        setTargetFromInput();
+      });
+
+      // ---------- preset: +7 days from now ----------
+      function setDefaultTarget() {
+        const now = new Date();
+        const future = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        // set to midnight for cleaner look
+        future.setHours(23, 59, 0, 0);
+        const iso = future.toISOString().slice(0, 16);
+        targetDateTime.value = iso;
+        setTargetFromInput();
+        // auto-start? we don't auto-start, user clicks start.
+      }
+
+      // ---------- init ----------
+      window.addEventListener('load', function() {
+        setDefaultTarget();
+        // set initial display
+        if (targetDate) {
+          const msLeft = targetDate.getTime() - Date.now();
+          if (msLeft > 0) {
+            updateDisplay(msLeft);
+          }
+        }
+      });
+
+      // handle page visibility – if tab hidden, we keep running (fine)
+      // but we can clean up if needed
+
+      // extra: if user clicks start with empty input, show hint
+    })();
+  </script>
+</body>
+</html>

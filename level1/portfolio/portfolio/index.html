@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Muhammad Mueen - Personal Portfolio Website. Web Developer & Designer." />
+    <title>Muhammad Mueen | Portfolio</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap"
+        rel="stylesheet" />
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+    <!-- ========== NAVIGATION ========== -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#home" class="nav-logo">M<span>.</span>Mueen</a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="#skills" class="nav-link">Skills</a></li>
+                <li><a href="#projects" class="nav-link">Projects</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ========== HERO SECTION ========== -->
+    <section class="hero" id="home">
+        <div class="hero-bg-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+        <div class="hero-container">
+            <div class="hero-image-wrapper">
+                <div class="hero-image-ring"></div>
+                <div class="hero-image-ring ring-2"></div>
+                <img src="profile.jpg" alt="Muhammad Mueen" class="hero-image" id="heroImage" />
+            </div>
+            <div class="hero-content">
+                <p class="hero-greeting">Hello, I'm</p>
+                <h1 class="hero-name">Muhammad <span>Mueen</span></h1>
+                <div class="hero-typed-wrapper">
+                    <span class="hero-typed" id="typedText"></span><span class="cursor">|</span>
+                </div>
+                <p class="hero-bio">
+                    A passionate developer crafting clean, beautiful, and user-friendly digital experiences. Let's build
+                    something amazing together.
+                </p>
+                <div class="hero-buttons">
+                    <a href="cv.pdf" download class="btn btn-primary">
+                        <i class="fas fa-download"></i> Download CV
+                    </a>
+                    <a href="#contact" class="btn btn-outline">
+                        <i class="fas fa-paper-plane"></i> Hire Me
+                    </a>
+                </div>
+            </div>
+        </div>
+        <a href="#about" class="scroll-down" aria-label="Scroll down">
+            <i class="fas fa-chevron-down"></i>
+        </a>
+    </section>
+
+    <!-- ========== ABOUT SECTION ========== -->
+    <section class="about section" id="about">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-subtitle">Get To Know</p>
+                <h2 class="section-title">About Me</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="about-grid">
+                <div class="about-image-col">
+                    <div class="about-image-wrapper">
+                        <img src="profile.jpg" alt="Muhammad Mueen" class="about-image" />
+                        <div class="about-image-badge">
+                            <span class="badge-number">2+</span>
+                            <span class="badge-text">Years of<br>Experience</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-content-col">
+                    <h3 class="about-heading">I'm Muhammad Mueen</h3>
+                    <p class="about-text">
+                        I'm a dedicated and passionate web developer with a strong eye for design and a love for writing
+                        clean, efficient code. I enjoy transforming complex problems into simple, beautiful, and
+                        intuitive digital solutions.
+                    </p>
+                    <p class="about-text">
+                        Currently pursuing my degree in Computer Science, I'm constantly exploring new technologies and
+                        frameworks to sharpen my skills. I believe in continuous learning and building products that
+                        make a real difference.
+                    </p>
+
+                    <div class="about-cards">
+                        <div class="about-card">
+                            <i class="fas fa-graduation-cap"></i>
+                            <div>
+                                <h4>Education</h4>
+                                <p>BS Computer Science</p>
+                            </div>
+                        </div>
+                        <div class="about-card">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div>
+                                <h4>Location</h4>
+                                <p>Pakistan</p>
+                            </div>
+                        </div>
+                        <div class="about-card">
+                            <i class="fas fa-briefcase"></i>
+                            <div>
+                                <h4>Freelance</h4>
+                                <p>Available</p>
+                            </div>
+                        </div>
+                        <div class="about-card">
+                            <i class="fas fa-envelope"></i>
+                            <div>
+                                <h4>Email</h4>
+                                <p>mueen@email.com</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SKILLS SECTION ========== -->
+    <section class="skills section" id="skills">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-subtitle">My Expertise</p>
+                <h2 class="section-title">Technical Skills</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="skills-grid">
+                <!-- Tech Skills -->
+                <div class="skills-category">
+                    <h3 class="skills-cat-title"><i class="fas fa-code"></i> Development</h3>
+                    <div class="skill-item">
+                        <div class="skill-meta">
+                            <span>HTML & CSS</span>
+                            <span>90%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-fill" data-width="90"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-meta">
+                            <span>JavaScript</span>
+                            <span>80%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-fill" data-width="80"></div>
+                        </div>
+                    </div>
+                   
+                    <div class="skill-item">
+                        <div class="skill-meta">
+                            <span>Python</span>
+                            <span>75%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-fill" data-width="75"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tools & Other -->
+                <div class="skills-category">
+                    <h3 class="skills-cat-title"><i class="fas fa-tools"></i> Tools & Design</h3>
+                    <div class="skill-item">
+                        <div class="skill-meta">
+                            <span>Git & GitHub</span>
+                            <span>85%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-fill" data-width="85"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-meta">
+                            <span>Figma / UI Design</span>
+                            <span>65%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-fill" data-width="65"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-meta">
+                            <span>vs code</span>
+                            <span>80%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-fill" data-width="60"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-meta">
+                            <span>MySQL / Databases</span>
+                            <span>70%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-fill" data-width="70"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tech Badges -->
+            <div class="tech-badges">
+                <span class="tech-badge"><i class="fab fa-html5"></i> HTML5</span>
+                <span class="tech-badge"><i class="fab fa-css3-alt"></i> CSS3</span>
+                <span class="tech-badge"><i class="fab fa-js"></i> JavaScript</span>
+                
+                <span class="tech-badge"><i class="fab fa-git-alt"></i> Git</span>
+                <span class="tech-badge"><i class="fab fa-figma"></i> Figma</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== PROJECTS SECTION ========== -->
+    <section class="projects section" id="projects">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-subtitle">My Work</p>
+                <h2 class="section-title">Featured Projects</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="projects-grid">
+
+                <!-- Project 1 -->
+                <div class="project-card">
+                    <div class="project-img-wrapper">
+                        <div class="project-placeholder" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="project-overlay">
+                            <a href="#" class="project-link" target="_blank" rel="noopener noreferrer">
+                                <i class="fas fa-external-link-alt"></i> Live Demo
+                            </a>
+                            <a href="#" class="project-link project-link-github" target="_blank"
+                                rel="noopener noreferrer">
+                                <i class="fab fa-github"></i> GitHub
+                            </a>
+                        </div>
+                    </div>
+                    <div class="project-info">
+                        <h3 class="project-title"> hashmi Organics E-Commerce Store</h3>
+                        <p class="project-desc">A full-featured online store with product listings, cart functionality,
+                            and secure checkout. Built with React and Node.js.</p>
+                        <div class="project-tags">
+                            <span>React</span>
+                            <span>Node.js</span>
+                            <span>MongoDB</span>
+                        </div>
+                    </div>
+                </div>
+
+
+               
+    </section>
+
+    <!-- ========== CONTACT SECTION ========== -->
+    <section class="contact section" id="contact">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-subtitle">Get In Touch</p>
+                <h2 class="section-title">Contact Me</h2>
+                <div class="section-line"></div>
+            </div>
+            <div class="contact-grid">
+                <div class="contact-info-col">
+                    <h3 class="contact-info-title">Let's Talk!</h3>
+                    <p class="contact-info-text">
+                        Have a project in mind or want to collaborate? Feel free to reach out — I'm always open to new
+                        opportunities and exciting ideas.
+                    </p>
+                    <div class="contact-info-items">
+                        <div class="contact-info-item">
+                            <div class="contact-info-icon"><i class="fas fa-envelope"></i></div>
+                            <div>
+                                <h4>Email</h4>
+                                <p>mueen@email.com</p>
+                                
+                            </div>
+                        </div>
+                        <div class="contact-info-item">
+                            <div class="contact-info-icon"><i class="fas fa-phone"></i></div>
+                            <div>
+                                <h4>Phone</h4>
+                                <p>+92 317 0680868</p>
+                            </div>
+                        </div>
+                        <div class="contact-info-item">
+                            <div class="contact-info-icon"><i class="fas fa-map-marker-alt"></i></div>
+                            <div>
+                                <h4>Location</h4>
+                                <p>Pakistan</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contact-socials">
+                        <a href="#" class="social-btn github" aria-label="GitHub" target="_blank"><i
+                                class="fab fa-github"></i></a>
+                        <a href="#" class="social-btn linkedin" aria-label="LinkedIn" target="_blank"><i
+                                class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-btn facebook" aria-label="Facebook" target="_blank"><i
+                                class="fab fa-facebook-f"></i></a>
+                    </div>
+                </div>
+                <div class="contact-form-col">
+                    <form class="contact-form" id="contactForm" novalidate>
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" name="name" placeholder="Your full name" required
+                                autocomplete="name" />
+                            <span class="form-error" id="nameError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" placeholder="your@email.com" required
+                                autocomplete="email" />
+                            <span class="form-error" id="emailError"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <input type="text" id="subject" name="subject" placeholder="What's this about?" />
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" name="message" rows="5" placeholder="Tell me about your project..."
+                                required></textarea>
+                            <span class="form-error" id="messageError"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+                            <i class="fas fa-paper-plane"></i> Send Message
+                        </button>
+                        <div class="form-success" id="formSuccess">
+                            <i class="fas fa-check-circle"></i> Message sent successfully! I'll get back to you soon.
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <a href="#home" class="footer-logo">M<span>.</span>Mueen</a>
+                <p class="footer-tagline">Building digital experiences with passion & purpose.</p>
+            </div>
+            <div class="footer-nav">
+                <a href="#home">Home</a>
+                <a href="#about">About</a>
+                <a href="#skills">Skills</a>
+                <a href="#projects">Projects</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <div class="footer-socials">
+                <a href="#" class="footer-social-btn" aria-label="GitHub" target="_blank"><i
+                        class="fab fa-github"></i></a>
+                <a href="#" class="footer-social-btn" aria-label="LinkedIn" target="_blank"><i
+                        class="fab fa-linkedin-in"></i></a>
+                <a href="#" class="footer-social-btn" aria-label="Facebook" target="_blank"><i
+                        class="fab fa-facebook-f"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Muhammad Mueen. Crafted with <i class="fas fa-heart"></i> and lots of coffee.</p>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

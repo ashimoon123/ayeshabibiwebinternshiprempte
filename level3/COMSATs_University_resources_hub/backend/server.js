@@ -7,6 +7,7 @@ const path = require('path');
 const http = require('http');
 const socketio = require('socket.io');
 const connectDB = require('./config/db');
+const userRoutes = require('./routes/userRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 dotenv.config();
@@ -53,6 +54,8 @@ io.on('connection', (socket) => {
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
+
+app.use('/api/users', userRoutes);
 
 // Static folder for uploads
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));

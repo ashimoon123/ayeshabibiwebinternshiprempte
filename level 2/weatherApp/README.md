@@ -68,3 +68,10 @@ This project is part of the internship training program.
 
 **Created by**: Ayesha Bibi  
 **Course**: FA23-BSE-031
+<img width="1887" height="923" alt="image" src="https://github.com/user-attachments/assets/c04736bb-8669-4f74-8f07-8ca2eaaa8b1f" />
+<img width="1889" height="705" alt="image" src="https://github.com/user-attachments/assets/df345971-9b5e-450f-9050-5836e65418b9" />
+
+
+
+
+

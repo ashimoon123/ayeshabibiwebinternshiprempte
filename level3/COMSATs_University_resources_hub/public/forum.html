@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum - COMSATS Resource Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a class="navbar-brand" href="index.html">COMSATS Resource Hub</a>
+            <div class="nav-links">
+                <a class="nav-link" href="index.html">Home</a>
+                <a class="nav-link" href="notes.html">Notes</a>
+                <a class="nav-link" href="lectures.html">Lectures</a>
+                <a class="nav-link" href="pastpapers.html">Past Papers</a>
+                <a class="nav-link" href="gpa.html">GPA Calculator</a>
+                <a class="nav-link active" href="forum.html">Forum</a>
+            </div>
+            <div class="nav-actions">
+                <a class="btn btn-primary" href="login.html">Login</a>
+                <a class="btn btn-outline" href="register.html">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page">
+        <div class="container">
+            <h1 class="page-title">💬 Discussion Forum</h1>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 1rem;">Create New Post</h3>
+                <div class="form-group">
+                    <label class="form-label">Post Title</label>
+                    <input type="text" class="form-input" placeholder="Enter post title...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Your Question/Topic</label>
+                    <textarea class="form-input" rows="4" placeholder="Ask your question..."></textarea>
+                </div>
+                <button class="btn btn-primary">Post Discussion</button>
+            </div>
+
+            <h3 style="margin: 2rem 0 1rem;">Recent Discussions</h3>
+            
+            <div class="forum-post">
+                <h4>Need help with CS101 Assignment?</h4>
+                <div class="post-author">Posted by: Ali Raza</div>
+                <div class="post-time">2 hours ago</div>
+                <p style="margin-top: 0.75rem; color:#475569">
+                    I'm having trouble understanding the programming concepts for this week's assignment. Can anyone share some tips or examples?
+                </p>
+                <div class="comment">
+                    <div style="font-weight: 600; color: #667eea;">Fatima Khan</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8;">1 hour ago</div>
+                    <p style="margin-top:0.5rem; color:#475569">You should check the lecture 5 notes, there are good examples there!</p>
+                </div>
+                <div class="comment">
+                    <div style="font-weight: 600; color: #667eea;">Ahmed Hassan</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8;">45 mins ago</div>
+                    <p style="margin-top:0.5rem; color:#475569">Let's meet in the library after class tomorrow, we can study together!</p>
+                </div>
+            </div>
+
+            <div class="forum-post">
+                <h4>Best resources for MATH101 final exam?</h4>
+                <div class="post-author">Posted by: Sara Ahmed</div>
+                <div class="post-time">1 day ago</div>
+                <p style="margin-top:0.75rem; color:#475569">
+                    Does anyone have recommendations for good practice problems for the calculus final?
+                </p>
+                <div class="comment">
+                    <div style="font-weight: 600; color: #667eea;">Prof. Omar Farooq</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8;">18 hours ago</div>
+                    <p style="margin-top:0.5rem; color:#475569">Check past papers from Fall 2023 and Spring 2024, they are excellent for practice!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">© 2024 COMSATS University Resource Hub. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

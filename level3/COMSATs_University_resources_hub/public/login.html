@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - COMSATS Resource Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a class="navbar-brand" href="index.html">COMSATS Resource Hub</a>
+            <div class="nav-links">
+                <a class="nav-link" href="index.html">Home</a>
+                <a class="nav-link" href="notes.html">Notes</a>
+                <a class="nav-link" href="lectures.html">Lectures</a>
+                <a class="nav-link" href="pastpapers.html">Past Papers</a>
+                <a class="nav-link" href="gpa.html">GPA Calculator</a>
+                <a class="nav-link" href="forum.html">Forum</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page" style="display: flex; justify-content: center; align-items: center; min-height: 70vh;">
+        <div class="card" style="max-width: 450px; width: 100%;">
+            <h1 class="page-title" style="text-align: center;">Login</h1>
+            
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">Login</button>
+                <p style="text-align: center; color: #64748b;">
+                    Don't have an account? <a href="register.html" style="color: #667eea; text-decoration: none; font-weight: 600;">Register here</a>
+                </p>
+            </form>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">© 2024 COMSATS University Resource Hub. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        function handleLogin(e) {
+            e.preventDefault();
+            alert('Login successful! Redirecting to home...');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

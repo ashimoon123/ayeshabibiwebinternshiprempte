@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
+const Bookmark = require('../models/Bookmark');
 const generateToken = require('../utils/generateToken');
 
 // @desc    Auth user & get token
@@ -8,17 +9,17 @@ const generateToken = require('../utils/generateToken');
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({
+    where: { email },
+  });
 
   if (user && (await user.matchPassword(password))) {
+    const userWithoutPassword = user.toJSON();
+    delete userWithoutPassword.password;
+
     res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      department: user.department,
-      semester: user.semester,
-      token: generateToken(user._id),
+      ...userWithoutPassword,
+      token: generateToken(user.id),
     });
   } else {
     res.status(401);
@@ -33,8 +34,8 @@ const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, role, department, semester } = req.body;
 
   console.log('📝 Registering user:', { name, email, role, department, semester });
-  
-  const userExists = await User.findOne({ email });
+
+  const userExists = await User.findOne({ where: { email } });
 
   if (userExists) {
     res.status(400);
@@ -51,14 +52,12 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
+    const userWithoutPassword = user.toJSON();
+    delete userWithoutPassword.password;
+
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      department: user.department,
-      semester: user.semester,
-      token: generateToken(user._id),
+      ...userWithoutPassword,
+      token: generateToken(user.id),
     });
   } else {
     res.status(400);
@@ -70,18 +69,12 @@ const registerUser = asyncHandler(async (req, res) => {
 // @route   GET /api/users/profile
 // @access  Private
 const getUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findByPk(req.user.id);
 
   if (user) {
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      department: user.department,
-      semester: user.semester,
-      bookmarks: user.bookmarks,
-    });
+    const userWithoutPassword = user.toJSON();
+    delete userWithoutPassword.password;
+    res.json(userWithoutPassword);
   } else {
     res.status(404);
     throw new Error('User not found');
@@ -92,7 +85,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/profile
 // @access  Private
 const updateUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findByPk(req.user.id);
 
   if (user) {
     user.name = req.body.name || user.name;
@@ -105,15 +98,12 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     }
 
     const updatedUser = await user.save();
+    const userWithoutPassword = updatedUser.toJSON();
+    delete userWithoutPassword.password;
 
     res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      role: updatedUser.role,
-      department: updatedUser.department,
-      semester: updatedUser.semester,
-      token: generateToken(updatedUser._id),
+      ...userWithoutPassword,
+      token: generateToken(updatedUser.id),
     });
   } else {
     res.status(404);
@@ -126,33 +116,40 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 // @access  Private
 const toggleBookmark = asyncHandler(async (req, res) => {
   const { resourceId, resourceType } = req.body;
-  const user = await User.findById(req.user._id);
+  const userId = req.user.id;
 
-  if (user) {
-    const index = user.bookmarks.findIndex(b => b.toString() === resourceId);
-    
-    if (index !== -1) {
-      // Remove bookmark
-      user.bookmarks.splice(index, 1);
-    } else {
-      // Add bookmark
-      user.bookmarks.push(resourceId);
-      user.onModel = resourceType;
-    }
+  // Check if bookmark exists
+  const existingBookmark = await Bookmark.findOne({
+    where: { userId, resourceId, resourceType },
+  });
 
-    const updatedUser = await user.save();
-    res.json({ bookmarks: updatedUser.bookmarks });
+  if (existingBookmark) {
+    // Remove bookmark
+    await existingBookmark.destroy();
   } else {
-    res.status(404);
-    throw new Error('User not found');
+    // Add bookmark
+    await Bookmark.create({
+      userId,
+      resourceId,
+      resourceType,
+    });
   }
+
+  // Return all bookmarks for user
+  const bookmarks = await Bookmark.findAll({
+    where: { userId },
+  });
+
+  res.json({ bookmarks });
 });
 
 // @desc    Get all users (Admin)
 // @route   GET /api/users
 // @access  Private/Admin
 const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({});
+  const users = await User.findAll({
+    attributes: { exclude: ['password'] },
+  });
   res.json(users);
 });
 
@@ -160,10 +157,10 @@ const getUsers = asyncHandler(async (req, res) => {
 // @route   DELETE /api/users/:id
 // @access  Private/Admin
 const deleteUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const user = await User.findByPk(req.params.id);
 
   if (user) {
-    await User.deleteOne({ _id: req.params.id });
+    await user.destroy();
     res.json({ message: 'User removed' });
   } else {
     res.status(404);
@@ -175,7 +172,9 @@ const deleteUser = asyncHandler(async (req, res) => {
 // @route   GET /api/users/:id
 // @access  Private/Admin
 const getUserById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id).select('-password');
+  const user = await User.findByPk(req.params.id, {
+    attributes: { exclude: ['password'] },
+  });
 
   if (user) {
     res.json(user);
@@ -189,7 +188,7 @@ const getUserById = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/:id
 // @access  Private/Admin
 const updateUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id);
+  const user = await User.findByPk(req.params.id);
 
   if (user) {
     user.name = req.body.name || user.name;
@@ -199,13 +198,10 @@ const updateUser = asyncHandler(async (req, res) => {
     user.semester = req.body.semester || user.semester;
 
     const updatedUser = await user.save();
+    const userWithoutPassword = updatedUser.toJSON();
+    delete userWithoutPassword.password;
 
-    res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      role: updatedUser.role,
-    });
+    res.json(userWithoutPassword);
   } else {
     res.status(404);
     throw new Error('User not found');
@@ -222,5 +218,4 @@ module.exports = {
   deleteUser,
   getUserById,
   updateUser,
-  checkMongoConnection,
 };

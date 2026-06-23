@@ -1,37 +1,30 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
+const User = require('./User');
 
-const gpaRecordSchema = mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    semester: {
-      type: Number,
-      required: true,
-    },
-    courses: [
-      {
-        name: String,
-        code: String,
-        creditHours: Number,
-        grade: String,
-        gradePoint: Number,
-      },
-    ],
-    sgpa: {
-      type: Number,
-      required: true,
-    },
-    cgpa: {
-      type: Number,
-      required: true,
-    },
+const GPARecord = sequelize.define('GPARecord', {
+  semester: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
   },
-  {
-    timestamps: true,
-  }
-);
+  courses: {
+    type: DataTypes.JSON,
+    allowNull: false,
+  },
+  sgpa: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  cgpa: {
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+}, {
+  timestamps: true,
+  tableName: 'gpa_records',
+});
 
-module.exports = mongoose.model('GPARecord', gpaRecordSchema);
+GPARecord.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(GPARecord, { foreignKey: 'userId', as: 'gpaRecords' });
+
+module.exports = GPARecord;

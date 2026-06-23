@@ -1,33 +1,78 @@
 const asyncHandler = require('express-async-handler');
-const { ForumPost, Comment } = require('../models/ForumPost');
+const {
+  ForumPost,
+  Comment,
+  CommentReply,
+  ForumPostUpvote,
+  ForumPostDownvote,
+  ForumPostReport,
+} = require('../models/ForumPost');
+const User = require('../models/User');
+const { Op } = require('sequelize');
 
 // @desc    Get all forum posts
 // @route   GET /api/forum
 // @access  Public
 const getPosts = asyncHandler(async (req, res) => {
   const { category, search } = req.query;
-  let query = { isReported: false };
+  let where = { isReported: false };
 
-  if (category) query.category = category;
+  if (category) where.category = category;
   if (search) {
-    query.$or = [
-      { title: { $regex: search, $options: 'i' } },
-      { content: { $regex: search, $options: 'i' } },
+    where[Op.or] = [
+      { title: { [Op.like]: `%${search}%` } },
+      { content: { [Op.like]: `%${search}%` } },
     ];
   }
 
-  const posts = await ForumPost.find(query).populate('author', 'name email').sort({ createdAt: -1 });
-  res.json(posts);
+  const posts = await ForumPost.findAll({
+    where,
+    include: {
+      model: User,
+      as: 'authorUser',
+      attributes: ['id', 'name', 'email'],
+    },
+    order: [['createdAt', 'DESC']],
+  });
+
+  // Add upvotes/downvotes counts
+  const postsWithCounts = await Promise.all(
+    posts.map(async (post) => {
+      const postJson = post.toJSON();
+      postJson.upvotesCount = await ForumPostUpvote.count({
+        where: { postId: post.id },
+      });
+      postJson.downvotesCount = await ForumPostDownvote.count({
+        where: { postId: post.id },
+      });
+      return postJson;
+    })
+  );
+
+  res.json(postsWithCounts);
 });
 
 // @desc    Get single forum post
 // @route   GET /api/forum/:id
 // @access  Public
 const getPostById = asyncHandler(async (req, res) => {
-  const post = await ForumPost.findById(req.params.id).populate('author', 'name email');
+  const post = await ForumPost.findByPk(req.params.id, {
+    include: {
+      model: User,
+      as: 'authorUser',
+      attributes: ['id', 'name', 'email'],
+    },
+  });
 
   if (post) {
-    res.json(post);
+    const postJson = post.toJSON();
+    postJson.upvotesCount = await ForumPostUpvote.count({
+      where: { postId: post.id },
+    });
+    postJson.downvotesCount = await ForumPostDownvote.count({
+      where: { postId: post.id },
+    });
+    res.json(postJson);
   } else {
     res.status(404);
     throw new Error('Post not found');
@@ -43,12 +88,19 @@ const createPost = asyncHandler(async (req, res) => {
   const post = await ForumPost.create({
     title,
     content,
-    author: req.user._id,
+    author: req.user.id,
     category,
     tags,
   });
 
-  const populatedPost = await ForumPost.findById(post._id).populate('author', 'name email');
+  const populatedPost = await ForumPost.findByPk(post.id, {
+    include: {
+      model: User,
+      as: 'authorUser',
+      attributes: ['id', 'name', 'email'],
+    },
+  });
+
   res.status(201).json(populatedPost);
 });
 
@@ -56,10 +108,10 @@ const createPost = asyncHandler(async (req, res) => {
 // @route   PUT /api/forum/:id
 // @access  Private
 const updatePost = asyncHandler(async (req, res) => {
-  const post = await ForumPost.findById(req.params.id);
+  const post = await ForumPost.findByPk(req.params.id);
 
   if (post) {
-    if (post.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (post.author !== req.user.id && req.user.role !== 'admin') {
       res.status(401);
       throw new Error('Not authorized');
     }
@@ -69,8 +121,16 @@ const updatePost = asyncHandler(async (req, res) => {
     post.category = req.body.category || post.category;
     post.tags = req.body.tags || post.tags;
 
-    const updatedPost = await post.save().then(p => p.populate('author', 'name email'));
-    res.json(updatedPost);
+    const updatedPost = await post.save();
+    const populatedPost = await ForumPost.findByPk(updatedPost.id, {
+      include: {
+        model: User,
+        as: 'authorUser',
+        attributes: ['id', 'name', 'email'],
+      },
+    });
+
+    res.json(populatedPost);
   } else {
     res.status(404);
     throw new Error('Post not found');
@@ -81,16 +141,19 @@ const updatePost = asyncHandler(async (req, res) => {
 // @route   DELETE /api/forum/:id
 // @access  Private
 const deletePost = asyncHandler(async (req, res) => {
-  const post = await ForumPost.findById(req.params.id);
+  const post = await ForumPost.findByPk(req.params.id);
 
   if (post) {
-    if (post.author.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (post.author !== req.user.id && req.user.role !== 'admin') {
       res.status(401);
       throw new Error('Not authorized');
     }
 
-    await Comment.deleteMany({ post: post._id });
-    await ForumPost.deleteOne({ _id: req.params.id });
+    await Comment.destroy({ where: { postId: post.id } });
+    await ForumPostUpvote.destroy({ where: { postId: post.id } });
+    await ForumPostDownvote.destroy({ where: { postId: post.id } });
+    await ForumPostReport.destroy({ where: { postId: post.id } });
+    await post.destroy();
     res.json({ message: 'Post removed' });
   } else {
     res.status(404);
@@ -102,31 +165,36 @@ const deletePost = asyncHandler(async (req, res) => {
 // @route   POST /api/forum/:id/upvote
 // @access  Private
 const upvotePost = asyncHandler(async (req, res) => {
-  const post = await ForumPost.findById(req.params.id);
+  const post = await ForumPost.findByPk(req.params.id);
 
   if (post) {
-    const alreadyUpvoted = post.upvotes.find(
-      (vote) => vote.toString() === req.user._id.toString()
-    );
-    const alreadyDownvoted = post.downvotes.find(
-      (vote) => vote.toString() === req.user._id.toString()
-    );
+    const existingUpvote = await ForumPostUpvote.findOne({
+      where: { postId: post.id, userId: req.user.id },
+    });
+    const existingDownvote = await ForumPostDownvote.findOne({
+      where: { postId: post.id, userId: req.user.id },
+    });
 
-    if (alreadyUpvoted) {
-      post.upvotes = post.upvotes.filter(
-        (vote) => vote.toString() !== req.user._id.toString()
-      );
+    if (existingUpvote) {
+      await existingUpvote.destroy();
     } else {
-      post.upvotes.push(req.user._id);
-      if (alreadyDownvoted) {
-        post.downvotes = post.downvotes.filter(
-          (vote) => vote.toString() !== req.user._id.toString()
-        );
+      await ForumPostUpvote.create({
+        postId: post.id,
+        userId: req.user.id,
+      });
+      if (existingDownvote) {
+        await existingDownvote.destroy();
       }
     }
 
-    const updatedPost = await post.save();
-    res.json({ upvotes: updatedPost.upvotes, downvotes: updatedPost.downvotes });
+    const upvotesCount = await ForumPostUpvote.count({
+      where: { postId: post.id },
+    });
+    const downvotesCount = await ForumPostDownvote.count({
+      where: { postId: post.id },
+    });
+
+    res.json({ upvotes: upvotesCount, downvotes: downvotesCount });
   } else {
     res.status(404);
     throw new Error('Post not found');
@@ -137,31 +205,36 @@ const upvotePost = asyncHandler(async (req, res) => {
 // @route   POST /api/forum/:id/downvote
 // @access  Private
 const downvotePost = asyncHandler(async (req, res) => {
-  const post = await ForumPost.findById(req.params.id);
+  const post = await ForumPost.findByPk(req.params.id);
 
   if (post) {
-    const alreadyDownvoted = post.downvotes.find(
-      (vote) => vote.toString() === req.user._id.toString()
-    );
-    const alreadyUpvoted = post.upvotes.find(
-      (vote) => vote.toString() === req.user._id.toString()
-    );
+    const existingDownvote = await ForumPostDownvote.findOne({
+      where: { postId: post.id, userId: req.user.id },
+    });
+    const existingUpvote = await ForumPostUpvote.findOne({
+      where: { postId: post.id, userId: req.user.id },
+    });
 
-    if (alreadyDownvoted) {
-      post.downvotes = post.downvotes.filter(
-        (vote) => vote.toString() !== req.user._id.toString()
-      );
+    if (existingDownvote) {
+      await existingDownvote.destroy();
     } else {
-      post.downvotes.push(req.user._id);
-      if (alreadyUpvoted) {
-        post.upvotes = post.upvotes.filter(
-          (vote) => vote.toString() !== req.user._id.toString()
-        );
+      await ForumPostDownvote.create({
+        postId: post.id,
+        userId: req.user.id,
+      });
+      if (existingUpvote) {
+        await existingUpvote.destroy();
       }
     }
 
-    const updatedPost = await post.save();
-    res.json({ upvotes: updatedPost.upvotes, downvotes: updatedPost.downvotes });
+    const upvotesCount = await ForumPostUpvote.count({
+      where: { postId: post.id },
+    });
+    const downvotesCount = await ForumPostDownvote.count({
+      where: { postId: post.id },
+    });
+
+    res.json({ upvotes: upvotesCount, downvotes: downvotesCount });
   } else {
     res.status(404);
     throw new Error('Post not found');
@@ -173,16 +246,21 @@ const downvotePost = asyncHandler(async (req, res) => {
 // @access  Private
 const reportPost = asyncHandler(async (req, res) => {
   const { reason } = req.body;
-  const post = await ForumPost.findById(req.params.id);
+  const post = await ForumPost.findByPk(req.params.id);
 
   if (post) {
-    post.reports.push({ user: req.user._id, reason });
-    if (post.reports.length >= 3) {
+    await ForumPostReport.create({
+      postId: post.id, userId: req.user.id, reason });
+    const reportsCount = await ForumPostReport.count({
+      where: { postId: post.id },
+    });
+
+    if (reportsCount >= 3) {
       post.isReported = true;
+      await post.save();
     }
 
-    const updatedPost = await post.save();
-    res.json({ isReported: updatedPost.isReported, reports: updatedPost.reports });
+    res.json({ isReported: post.isReported, reports: reportsCount });
   } else {
     res.status(404);
     throw new Error('Post not found');
@@ -193,10 +271,28 @@ const reportPost = asyncHandler(async (req, res) => {
 // @route   GET /api/forum/:postId/comments
 // @access  Public
 const getComments = asyncHandler(async (req, res) => {
-  const comments = await Comment.find({ post: req.params.postId })
-    .populate('author', 'name email')
-    .populate('replies.author', 'name email')
-    .sort({ createdAt: -1 });
+  const comments = await Comment.findAll({
+    where: { postId: req.params.postId },
+    include: [
+      {
+        model: User,
+        as: 'authorUser',
+        attributes: ['id', 'name', 'email'],
+      },
+      {
+        model: CommentReply,
+        as: 'replies',
+        include: [
+          {
+            model: User,
+            as: 'authorUser',
+            attributes: ['id', 'name', 'email'],
+          },
+        ],
+      },
+    ],
+    order: [['createdAt', 'DESC']],
+  });
   res.json(comments);
 });
 
@@ -208,11 +304,18 @@ const addComment = asyncHandler(async (req, res) => {
 
   const comment = await Comment.create({
     content,
-    author: req.user._id,
-    post: req.params.postId,
+    author: req.user.id,
+    postId: req.params.postId,
   });
 
-  const populatedComment = await Comment.findById(comment._id).populate('author', 'name email');
+  const populatedComment = await Comment.findByPk(comment.id, {
+    include: {
+      model: User,
+      as: 'authorUser',
+      attributes: ['id', 'name', 'email'],
+    },
+  });
+
   res.status(201).json(populatedComment);
 });
 
@@ -221,18 +324,24 @@ const addComment = asyncHandler(async (req, res) => {
 // @access  Private
 const addReply = asyncHandler(async (req, res) => {
   const { content } = req.body;
-  const comment = await Comment.findById(req.params.commentId);
+  const comment = await Comment.findByPk(req.params.commentId);
 
   if (comment) {
-    comment.replies.push({
+    const reply = await CommentReply.create({
       content,
-      author: req.user._id,
+      author: req.user.id,
+      commentId: comment.id,
     });
 
-    const updatedComment = await comment.save()
-      .then(c => c.populate('author', 'name email'))
-      .then(c => c.populate('replies.author', 'name email'));
-    res.json(updatedComment);
+    const populatedReply = await CommentReply.findByPk(reply.id, {
+      include: {
+        model: User,
+        as: 'authorUser',
+        attributes: ['id', 'name', 'email'],
+      },
+    });
+
+    res.json(populatedReply);
   } else {
     res.status(404);
     throw new Error('Comment not found');
@@ -243,9 +352,27 @@ const addReply = asyncHandler(async (req, res) => {
 // @route   GET /api/forum/reported
 // @access  Private/Admin
 const getReportedPosts = asyncHandler(async (req, res) => {
-  const posts = await ForumPost.find({ isReported: true })
-    .populate('author', 'name email')
-    .populate('reports.user', 'name email');
+  const posts = await ForumPost.findAll({
+    where: { isReported: true },
+    include: [
+      {
+        model: User,
+        as: 'authorUser',
+        attributes: ['id', 'name', 'email'],
+      },
+      {
+        model: ForumPostReport,
+        as: 'reports',
+        include: [
+          {
+            model: User,
+            as: 'user',
+            attributes: ['id', 'name', 'email'],
+          },
+        ],
+      },
+    ],
+  });
   res.json(posts);
 });
 
@@ -253,14 +380,13 @@ const getReportedPosts = asyncHandler(async (req, res) => {
 // @route   PUT /api/forum/:id/resolve
 // @access  Private/Admin
 const resolveReportedPost = asyncHandler(async (req, res) => {
-  const post = await ForumPost.findById(req.params.id);
+  const post = await ForumPost.findByPk(req.params.id);
 
   if (post) {
     post.isReported = false;
-    post.reports = [];
-
-    const updatedPost = await post.save();
-    res.json(updatedPost);
+    await ForumPostReport.destroy({ where: { postId: post.id } });
+    await post.save();
+    res.json(post);
   } else {
     res.status(404);
     throw new Error('Post not found');

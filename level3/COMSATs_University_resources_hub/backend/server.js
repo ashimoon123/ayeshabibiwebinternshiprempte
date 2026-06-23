@@ -16,7 +16,7 @@ console.log('🔧 Environment loaded');
 console.log('  - PORT:', process.env.PORT || 5000);
 console.log('  - NODE_ENV:', process.env.NODE_ENV);
 
-const connectDB = require('./config/db');
+const { connectDB } = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const noteRoutes = require('./routes/noteRoutes');
 const lectureRoutes = require('./routes/lectureRoutes');

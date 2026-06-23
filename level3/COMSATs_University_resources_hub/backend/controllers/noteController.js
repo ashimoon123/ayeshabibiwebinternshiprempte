@@ -1,36 +1,67 @@
 const asyncHandler = require('express-async-handler');
 const Note = require('../models/Note');
+const NoteLike = require('../models/NoteLike');
+const NoteRating = require('../models/NoteRating');
+const User = require('../models/User');
 const upload = require('../utils/upload');
+const { Op } = require('sequelize');
 
 // @desc    Get all notes
 // @route   GET /api/notes
 // @access  Public
 const getNotes = asyncHandler(async (req, res) => {
   const { department, semester, courseCode, search } = req.query;
-  let query = {};
+  let where = {};
 
-  if (department) query.department = department;
-  if (semester) query.semester = semester;
-  if (courseCode) query.courseCode = courseCode;
+  if (department) where.department = department;
+  if (semester) where.semester = semester;
+  if (courseCode) where.courseCode = courseCode;
   if (search) {
-    query.$or = [
-      { title: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } },
+    where[Op.or] = [
+      { title: { [Op.like]: `%${search}%` } },
+      { description: { [Op.like]: `%${search}%` } },
     ];
   }
 
-  const notes = await Note.find(query).populate('uploadedBy', 'name email');
-  res.json(notes);
+  const notes = await Note.findAll({
+    where,
+    include: {
+      model: User,
+      as: 'uploadedByUser',
+      attributes: ['id', 'name', 'email'],
+    },
+  });
+
+  // Add likes count to each note
+  const notesWithLikes = await Promise.all(
+    notes.map(async (note) => {
+      const noteJson = note.toJSON();
+      const likesCount = await NoteLike.count({ where: { noteId: note.id } });
+      noteJson.likesCount = likesCount;
+      return noteJson;
+    })
+  );
+
+  res.json(notesWithLikes);
 });
 
 // @desc    Get single note
 // @route   GET /api/notes/:id
 // @access  Public
 const getNoteById = asyncHandler(async (req, res) => {
-  const note = await Note.findById(req.params.id).populate('uploadedBy', 'name email');
+  const note = await Note.findByPk(req.params.id, {
+    include: {
+      model: User,
+      as: 'uploadedByUser',
+      attributes: ['id', 'name', 'email'],
+    },
+  });
 
   if (note) {
-    res.json(note);
+    const noteJson = note.toJSON();
+    const likesCount = await NoteLike.count({ where: { noteId: note.id } });
+    noteJson.likesCount = likesCount;
+    res.json(noteJson);
   } else {
     res.status(404);
     throw new Error('Note not found');
@@ -58,10 +89,18 @@ const uploadNote = asyncHandler(async (req, res) => {
       semester,
       courseCode,
       file: req.file.filename,
-      uploadedBy: req.user._id,
+      uploadedBy: req.user.id,
     });
 
-    res.status(201).json(note);
+    const populatedNote = await Note.findByPk(note.id, {
+      include: {
+        model: User,
+        as: 'uploadedByUser',
+        attributes: ['id', 'name', 'email'],
+      },
+    });
+
+    res.status(201).json(populatedNote);
   });
 });
 
@@ -69,10 +108,10 @@ const uploadNote = asyncHandler(async (req, res) => {
 // @route   PUT /api/notes/:id
 // @access  Private
 const updateNote = asyncHandler(async (req, res) => {
-  const note = await Note.findById(req.params.id);
+  const note = await Note.findByPk(req.params.id);
 
   if (note) {
-    if (note.uploadedBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (note.uploadedBy !== req.user.id && req.user.role !== 'admin') {
       res.status(401);
       throw new Error('Not authorized');
     }
@@ -84,7 +123,15 @@ const updateNote = asyncHandler(async (req, res) => {
     note.courseCode = req.body.courseCode || note.courseCode;
 
     const updatedNote = await note.save();
-    res.json(updatedNote);
+    const populatedNote = await Note.findByPk(updatedNote.id, {
+      include: {
+        model: User,
+        as: 'uploadedByUser',
+        attributes: ['id', 'name', 'email'],
+      },
+    });
+
+    res.json(populatedNote);
   } else {
     res.status(404);
     throw new Error('Note not found');
@@ -95,15 +142,15 @@ const updateNote = asyncHandler(async (req, res) => {
 // @route   DELETE /api/notes/:id
 // @access  Private
 const deleteNote = asyncHandler(async (req, res) => {
-  const note = await Note.findById(req.params.id);
+  const note = await Note.findByPk(req.params.id);
 
   if (note) {
-    if (note.uploadedBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (note.uploadedBy !== req.user.id && req.user.role !== 'admin') {
       res.status(401);
       throw new Error('Not authorized');
     }
 
-    await Note.deleteOne({ _id: req.params.id });
+    await note.destroy();
     res.json({ message: 'Note removed' });
   } else {
     res.status(404);
@@ -115,23 +162,24 @@ const deleteNote = asyncHandler(async (req, res) => {
 // @route   POST /api/notes/:id/like
 // @access  Private
 const likeNote = asyncHandler(async (req, res) => {
-  const note = await Note.findById(req.params.id);
+  const note = await Note.findByPk(req.params.id);
 
   if (note) {
-    const alreadyLiked = note.likes.find(
-      (like) => like.toString() === req.user._id.toString()
-    );
+    const existingLike = await NoteLike.findOne({
+      where: { noteId: note.id, userId: req.user.id },
+    });
 
-    if (alreadyLiked) {
-      note.likes = note.likes.filter(
-        (like) => like.toString() !== req.user._id.toString()
-      );
+    if (existingLike) {
+      await existingLike.destroy();
     } else {
-      note.likes.push(req.user._id);
+      await NoteLike.create({
+        noteId: note.id,
+        userId: req.user.id,
+      });
     }
 
-    const updatedNote = await note.save();
-    res.json({ likes: updatedNote.likes });
+    const likesCount = await NoteLike.count({ where: { noteId: note.id } });
+    res.json({ likes: likesCount });
   } else {
     res.status(404);
     throw new Error('Note not found');
@@ -143,25 +191,32 @@ const likeNote = asyncHandler(async (req, res) => {
 // @access  Private
 const rateNote = asyncHandler(async (req, res) => {
   const { rating } = req.body;
-  const note = await Note.findById(req.params.id);
+  const note = await Note.findByPk(req.params.id);
 
   if (note) {
-    const existingRating = note.ratings.find(
-      (r) => r.user.toString() === req.user._id.toString()
-    );
+    const existingRating = await NoteRating.findOne({
+      where: { noteId: note.id, userId: req.user.id },
+    });
 
     if (existingRating) {
       existingRating.rating = rating;
+      await existingRating.save();
     } else {
-      note.ratings.push({ user: req.user._id, rating });
+      await NoteRating.create({
+        noteId: note.id,
+        userId: req.user.id,
+        rating,
+      });
     }
 
     // Calculate average rating
-    const total = note.ratings.reduce((sum, r) => sum + r.rating, 0);
-    note.averageRating = total / note.ratings.length;
+    const ratings = await NoteRating.findAll({ where: { noteId: note.id } });
+    const total = ratings.reduce((sum, r) => sum + r.rating, 0);
+    const averageRating = ratings.length > 0 ? total / ratings.length : 0;
+    note.averageRating = averageRating;
+    await note.save();
 
-    const updatedNote = await note.save();
-    res.json({ averageRating: updatedNote.averageRating, ratings: updatedNote.ratings });
+    res.json({ averageRating, ratings: ratings.length });
   } else {
     res.status(404);
     throw new Error('Note not found');
@@ -172,7 +227,7 @@ const rateNote = asyncHandler(async (req, res) => {
 // @route   POST /api/notes/:id/download
 // @access  Private
 const incrementDownload = asyncHandler(async (req, res) => {
-  const note = await Note.findById(req.params.id);
+  const note = await Note.findByPk(req.params.id);
 
   if (note) {
     note.downloadCount += 1;
@@ -188,7 +243,14 @@ const incrementDownload = asyncHandler(async (req, res) => {
 // @route   GET /api/notes/user
 // @access  Private
 const getUserNotes = asyncHandler(async (req, res) => {
-  const notes = await Note.find({ uploadedBy: req.user._id });
+  const notes = await Note.findAll({
+    where: { uploadedBy: req.user.id },
+    include: {
+      model: User,
+      as: 'uploadedByUser',
+      attributes: ['id', 'name', 'email'],
+    },
+  });
   res.json(notes);
 });
 

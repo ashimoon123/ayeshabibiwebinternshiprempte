@@ -12,10 +12,6 @@ const {
   updateUser,
 } = require('../controllers/userController');
 const { protect, authorize } = require('../middleware/authMiddleware');
-const { checkMongoConnection } = require('../middleware/dbMiddleware');
-
-// Apply MongoDB connection check to all user routes
-router.use(checkMongoConnection);
 
 router.route('/').post(registerUser).get(protect, authorize('admin'), getUsers);
 router.post('/login', authUser);

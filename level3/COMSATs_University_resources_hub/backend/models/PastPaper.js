@@ -1,49 +1,48 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
+const User = require('./User');
 
-const pastPaperSchema = mongoose.Schema(
-  {
-    title: {
-      type: String,
-      required: true,
-    },
-    description: String,
-    subject: {
-      type: String,
-      required: true,
-    },
-    semester: {
-      type: Number,
-      required: true,
-    },
-    year: {
-      type: Number,
-      required: true,
-    },
-    file: {
-      type: String,
-      required: true,
-    },
-    uploadedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    isApproved: {
-      type: Boolean,
-      default: false,
-    },
-    approvedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
-    downloadCount: {
-      type: Number,
-      default: 0,
-    },
+const PastPaper = sequelize.define('PastPaper', {
+  title: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
-  {
-    timestamps: true,
-  }
-);
+  description: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  subject: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  semester: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  year: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  file: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  isApproved: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  downloadCount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+}, {
+  timestamps: true,
+  tableName: 'past_papers',
+});
 
-module.exports = mongoose.model('PastPaper', pastPaperSchema);
+PastPaper.belongsTo(User, { foreignKey: 'uploadedBy', as: 'uploadedByUser' });
+PastPaper.belongsTo(User, { foreignKey: 'approvedBy', as: 'approvedByUser', allowNull: true });
+User.hasMany(PastPaper, { foreignKey: 'uploadedBy', as: 'uploadedPastPapers' });
+User.hasMany(PastPaper, { foreignKey: 'approvedBy', as: 'approvedPastPapers' });
+
+module.exports = PastPaper;

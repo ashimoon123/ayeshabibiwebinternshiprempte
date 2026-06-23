@@ -51,8 +51,11 @@ const saveGPARecord = asyncHandler(async (req, res) => {
   const { semester, courses, sgpa } = req.body;
 
   // Get all previous records to calculate CGPA
-  const previousRecords = await GPARecord.find({ user: req.user._id }).sort({ semester: 1 });
-  
+  const previousRecords = await GPARecord.findAll({
+    where: { userId: req.user.id },
+    order: [['semester', 'ASC']],
+  });
+
   let totalGradePoints = sgpa * courses.reduce((sum, c) => sum + c.creditHours, 0);
   let totalCredits = courses.reduce((sum, c) => sum + c.creditHours, 0);
 
@@ -65,7 +68,7 @@ const saveGPARecord = asyncHandler(async (req, res) => {
   const cgpa = totalCredits > 0 ? totalGradePoints / totalCredits : sgpa;
 
   const gpaRecord = await GPARecord.create({
-    user: req.user._id,
+    userId: req.user.id,
     semester,
     courses,
     sgpa,
@@ -79,7 +82,10 @@ const saveGPARecord = asyncHandler(async (req, res) => {
 // @route   GET /api/gpa
 // @access  Private
 const getGPARecords = asyncHandler(async (req, res) => {
-  const records = await GPARecord.find({ user: req.user._id }).sort({ semester: 1 });
+  const records = await GPARecord.findAll({
+    where: { userId: req.user.id },
+    order: [['semester', 'ASC']],
+  });
   res.json(records);
 });
 
@@ -87,15 +93,15 @@ const getGPARecords = asyncHandler(async (req, res) => {
 // @route   DELETE /api/gpa/:id
 // @access  Private
 const deleteGPARecord = asyncHandler(async (req, res) => {
-  const record = await GPARecord.findById(req.params.id);
+  const record = await GPARecord.findByPk(req.params.id);
 
   if (record) {
-    if (record.user.toString() !== req.user._id.toString()) {
+    if (record.userId !== req.user.id) {
       res.status(401);
       throw new Error('Not authorized');
     }
 
-    await GPARecord.deleteOne({ _id: req.params.id });
+    await record.destroy();
     res.json({ message: 'GPA record removed' });
   } else {
     res.status(404);

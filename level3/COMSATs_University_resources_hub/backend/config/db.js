@@ -1,20 +1,28 @@
-const mongoose = require('mongoose');
+const { Sequelize } = require('sequelize');
+const path = require('path');
+
+// Create a Sequelize instance for SQLite
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: path.join(__dirname, '../database.sqlite'),
+  logging: process.env.NODE_ENV === 'development' ? console.log : false,
+});
 
 const connectDB = async () => {
   try {
-    console.log('Connecting to MongoDB...', process.env.MONGO_URI);
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds if MongoDB isn't running
-    });
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-    return conn;
+    await sequelize.authenticate();
+    console.log('✅ SQLite database connected successfully!');
+    
+    // Sync models (create tables if they don't exist)
+    await sequelize.sync({ alter: true }); // Use alter: true to update tables
+    console.log('✅ Database models synchronized!');
+    
+    return sequelize;
   } catch (error) {
-    console.error(`❌ MongoDB Connection Error: ${error.message}`);
+    console.error('❌ SQLite database connection error:', error.message);
     console.error(error.stack);
-    // Don't exit process in development to keep server running
+    throw error;
   }
 };
 
-module.exports = connectDB;
+module.exports = { connectDB, sequelize };

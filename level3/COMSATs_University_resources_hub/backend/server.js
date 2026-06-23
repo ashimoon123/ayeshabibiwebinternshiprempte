@@ -83,6 +83,12 @@ app.get('/', (req, res) => {
   });
 });
 
+// Add console.log to track API calls
+app.use((req, res, next) => {
+  console.log('📥 Incoming request:', req.method, req.url);
+  next();
+});
+
 app.use('/api/users', userRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/lectures', lectureRoutes);
@@ -92,10 +98,20 @@ app.use('/api/gpa', gpaRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
 
+// Global Error Middleware as requested
+app.use((err, req, res, next) => {
+  console.error('❌ Global Error Handler:');
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    message: err.message
+  });
+});
+
 app.use(notFound);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 server.listen(PORT, () => {
   console.log('\n✅ Backend server is running!');

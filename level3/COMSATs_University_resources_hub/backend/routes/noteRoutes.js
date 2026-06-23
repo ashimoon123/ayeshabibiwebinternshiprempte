@@ -12,6 +12,9 @@ const {
   getUserNotes,
 } = require('../controllers/noteController');
 const { protect } = require('../middleware/authMiddleware');
+const { checkMongoConnection } = require('../middleware/dbMiddleware');
+
+router.use(checkMongoConnection);
 
 router.route('/').get(getNotes).post(protect, uploadNote);
 router.route('/user').get(protect, getUserNotes);

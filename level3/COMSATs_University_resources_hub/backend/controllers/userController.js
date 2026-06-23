@@ -32,41 +32,37 @@ const authUser = asyncHandler(async (req, res) => {
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, role, department, semester } = req.body;
 
-  try {
-    const userExists = await User.findOne({ email });
+  console.log('📝 Registering user:', { name, email, role, department, semester });
+  
+  const userExists = await User.findOne({ email });
 
-    if (userExists) {
-      res.status(400);
-      throw new Error('User already exists');
-    }
+  if (userExists) {
+    res.status(400);
+    throw new Error('User already exists');
+  }
 
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role,
-      department,
-      semester,
+  const user = await User.create({
+    name,
+    email,
+    password,
+    role,
+    department,
+    semester,
+  });
+
+  if (user) {
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      department: user.department,
+      semester: user.semester,
+      token: generateToken(user._id),
     });
-
-    if (user) {
-      res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        department: user.department,
-        semester: user.semester,
-        token: generateToken(user._id),
-      });
-    } else {
-      res.status(400);
-      throw new Error('Invalid user data');
-    }
-  } catch (error) {
-    console.error('Registration Error:', error.message);
-    res.status(500);
-    throw new Error(error.message);
+  } else {
+    res.status(400);
+    throw new Error('Invalid user data');
   }
 });
 
@@ -226,4 +222,5 @@ module.exports = {
   deleteUser,
   getUserById,
   updateUser,
+  checkMongoConnection,
 };
